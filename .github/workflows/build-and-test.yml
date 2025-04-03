@@ -53,6 +53,7 @@ jobs:
           DEFAULT_ADMIN_NAME: Demo Demo
           DEFAULT_ADMIN_USERNAME: demo
         run: |
+          chmod +x client/tests/setup-symlinks.sh
           client/tests/setup-symlinks.sh
           cd server
           cp .env.sample .env
