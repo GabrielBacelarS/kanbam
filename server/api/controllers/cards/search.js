@@ -8,6 +8,24 @@ const Errors = {
 
 module.exports = {
   inputs: {
+    id: {
+      type: 'string',
+      regex: /^[0-9]+$/,
+      required: false,
+      description: 'ID do cartão para busca direta',
+    },
+    creatorUserId: {
+      type: 'string',
+      regex: /^[0-9]+$/,
+      required: false,
+      description: 'ID do usuário que criou o cartão',
+    },
+    userId: {
+      type: 'string',
+      regex: /^[0-9]+$/,
+      required: false,
+      description: 'ID do usuário atribuído ao cartão (membro)',
+    },
     startDate: {
       type: 'string',
       description: 'Data inicial para filtrar (YYYY-MM-DD)',
@@ -51,6 +69,16 @@ module.exports = {
 
     // Construir os critérios de busca
     const criteria = {};
+
+    // Filtrar por ID do cartão se especificado
+    if (inputs.id) {
+      criteria.id = inputs.id;
+    }
+
+    // Filtrar por ID do usuário criador se especificado
+    if (inputs.creatorUserId) {
+      criteria.creatorUserId = inputs.creatorUserId;
+    }
 
     // Filtrar por datas se especificados
     if (inputs.startDate || inputs.endDate) {
@@ -111,7 +139,21 @@ module.exports = {
     }
 
     // Buscar os cards com os critérios definidos
-    const cards = await sails.helpers.cards.getMany(criteria);
+    let cards = await sails.helpers.cards.getMany(criteria);
+
+    // Filtrar por userId (membro do card) se especificado
+    if (inputs.userId) {
+      // Buscar todos os card memberships para o usuário
+      const cardMemberships = await CardMembership.find({
+        userId: inputs.userId,
+      });
+
+      // Extrair os IDs dos cartões onde o usuário é membro
+      const memberCardIds = cardMemberships.map((membership) => membership.cardId);
+
+      // Filtrar a lista de cartões para incluir apenas aqueles onde o usuário é membro
+      cards = cards.filter((card) => memberCardIds.includes(card.id));
+    }
 
     // Processar os cartões em paralelo com Promise.all
     const accessibilityPromises = cards.map(async (card) => {
