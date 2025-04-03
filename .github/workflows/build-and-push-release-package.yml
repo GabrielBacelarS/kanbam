@@ -53,4 +53,4 @@ jobs:
         run: |
           gh release upload ${{ github.event.release.tag_name }} planka-prebuild.zip
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.TOKEN }}
